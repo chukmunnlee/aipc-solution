@@ -15,6 +15,14 @@ resource docker_container cont-dov-bear {
   }
 }
 
+locals {
+  container_ip_ports = flatten(
+    [ for c in docker_container.cont-dov-bear: 
+      [ for p in c.ports: "${var.docker_host}:${p.external}" ]
+    ]
+  )
+}
+
 # Nginx
 resource digitalocean_ssh_key default-key {
   name = "default-key"
@@ -34,13 +42,16 @@ resource local_file root_at_ip {
   filename = "root@${digitalocean_droplet.nginx.ipv4_address}"
 }
 
+resource local_file nginx_conf {
+  content = templatefile("./nginx.conf.tpl", {
+    containers = local.container_ip_ports
+  })
+  filename = "nginx.conf"
+}
+
 output external_ports {
   description = "Container external ports"
-  value = flatten(
-    [ for c in docker_container.cont-dov-bear: 
-      [ for p in c.ports: "${var.docker_host}:${p.external}" ]
-    ]
-  )
+  value = local.container_ip_ports
 }
 
 output nginx_ipv4_address {

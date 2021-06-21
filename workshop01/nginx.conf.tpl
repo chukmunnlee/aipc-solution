@@ -12,17 +12,13 @@ http {
 	access_log /var/log/nginx/access.log;
 	error_log /var/log/nginx/error.log;
 
-	##
-	# Gzip Settings
-	##
-
 	gzip on;
 
 	upstream dov-bear {
 		least_conn;
-		server 165.22.97.24:32772;
-		server 165.22.97.24:32773;
-		server 165.22.97.24:32774;
+		%{~ for ip_port in containers ~}
+		server ${ip_port};
+		%{~ endfor ~}
 	}
 
 	server {
