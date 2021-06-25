@@ -1,0 +1,21 @@
+- name: Configure Code Server
+  hosts: all
+  tasks:
+  - name: Update Code Server password 
+    lineinfile:
+       path: "/lib/systemd/system/code-server.service"
+       regexp: "^Environment="
+       line: "Environment=PASSWORD={{ password }}"
+  - name: Update Nginx domain 
+    lineinfile:
+       path: "/etc/nginx/sites-available/code-server.conf"
+       regexp: "server_name"
+       line: "server_name code-{{ ansible_host }}.nip.io;"
+  - name: Restart services
+    systemd:
+       name: "{{ item }}"
+       state: restarted
+    loop:
+    - code-server
+    - nginx
+
