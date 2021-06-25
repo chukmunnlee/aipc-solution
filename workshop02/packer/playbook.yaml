@@ -1,35 +1,81 @@
 # Input variables
-# - code_source_version 
+# - code_server_version 
 # - install_dir
-#
+# - password
+
 - name: Install code-server
   hosts: all
   vars:
      code_server_dir: "/usr/lib/code-server"
-     code_source_dist: "code-server-{{ code_source_version }}-linux-amd64"
-     code_source_archive: "{{ code_source_dist }}.tar.gz"
-     code_source_url: "github.com/cdr/code-server/releases/download/v{{ code_source_version }}/{{ code_source_dist }}"
+     code_server_dist: "code-server-{{ code_server_version }}-linux-amd64"
+     code_server_archive: "{{ code_server_dist }}.tar.gz"
+     code_server_url: "https://github.com/cdr/code-server/releases/download/v{{ code_server_version }}/{{ code_server_archive }}"
+     code_server_password: "{{ password }}"
+  tags:
+  - phase_1
   tasks:
-  - name: Make install directory
+  - name: Make required directories
     file:
-       path: "{{ install_dir }}"
+       path: "{{ item }}"
        state: directory
        mode: "0755"
-  - name: Download code-source
+    loop:
+    - "{{ install_dir }}"
+    - "/var/lib/code-server"
+  - name: Check if archive have been downloaded
+    stat:
+       path: '{{ install_dir }}/{{ code_server_archive }}'
+    register: f
+  - name: Download code-server
     get_url:
-       url: "{{ code_source_url }}"
+       url: "{{ code_server_url }}"
        dest: "{{ install_dir }}"
+    when: not f.stat.exists
   - name: Unpack TAR file
     unarchive:
-       src: "{{ install_dir }}/{{ code_source_archive }}"
+       src: "{{ install_dir }}/{{ code_server_archive }}"
        dest: "{{ install_dir }}"
+       remote_src: yes
   - name: Move unpacked distribution to /usr/lib/code-server
     shell:
        chdir: "{{ install_dir }}"
-       cmd: "mv {{ code_source_dist }} {{ code_server_dir }}"
+       cmd: "mv {{ code_server_dist }} {{ code_server_dir }}"
        creates: "{{ code_server_dir }}"
   - name: Symlink code-server to /usr/bin/code-server
     file:
        src: "{{ code_server_dir }}/bin/code-server"
        dest: "/usr/bin/code-server"
        state: link
+  - name: Create service file
+    template:
+       src: "./code-server.service.j2"
+       dest: "/lib/systemd/system/code-server.service"
+  - name: Enable code server
+    systemd:
+       name: code-server
+       state: started
+
+- name: Install Nginx
+  hosts: all
+  tags:
+  - phase_2
+  tasks:
+  - name: Install Nginx
+    apt:
+       name: nginx
+       update_cache: yes
+       state: latest
+  - name: Copy code server config file for Nginx
+    template:
+       src: "./code-server.conf.j2"
+       dest: "/etc/nginx/sites-available/code-server.conf"
+  - name: Symlink code server config to sites-enabled
+    file:
+       src: "/etc/nginx/sites-available/code-server.conf"
+       dest: "/etc/nginx/sites-enabled/code-server.conf"
+       state: link
+  - name: Restart Nginx
+    systemd:
+       name: nginx
+       state: restarted
+
