@@ -16,10 +16,15 @@ variable DO_image {
 	default = "ubuntu-20-04-x64"
 }
 
-variable VERSION {
+variable CS_password {
+	type = string
+	default = "changeit"
+}
+
+variable CS_version {
 	type = string
 	description = "Code Server version"
-	default = "123"
+	default = "3.10.2"
 }
 
 source digitalocean code-server {
@@ -27,7 +32,7 @@ source digitalocean code-server {
 	region = var.DO_region
 	image = var.DO_image
 	size = var.DO_size
-	snapshot_name = "code-server-${var.VERSION}"
+	snapshot_name = "code-server-${var.CS_version}"
 	ssh_username = "root"
 }
 
@@ -35,4 +40,13 @@ build {
 	sources = [
 		"source.digitalocean.code-server"
 	]
+
+	provisioner ansible {
+		playbook_file = "./playbook.yaml"
+		extra_arguments = [
+			"-e", "code_server_version=${var.CS_version}",
+			"-e", "install_dir=/opt/tmp",
+			"-e", "password=\"${var.CS_password}\""
+		]
+	}
 }
