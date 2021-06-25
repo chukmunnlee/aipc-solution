@@ -1,0 +1,35 @@
+# Input variables
+# - code_source_version 
+# - install_dir
+#
+- name: Install code-server
+  hosts: all
+  vars:
+     code_server_dir: "/usr/lib/code-server"
+     code_source_dist: "code-server-{{ code_source_version }}-linux-amd64"
+     code_source_archive: "{{ code_source_dist }}.tar.gz"
+     code_source_url: "github.com/cdr/code-server/releases/download/v{{ code_source_version }}/{{ code_source_dist }}"
+  tasks:
+  - name: Make install directory
+    file:
+       path: "{{ install_dir }}"
+       state: directory
+       mode: "0755"
+  - name: Download code-source
+    get_url:
+       url: "{{ code_source_url }}"
+       dest: "{{ install_dir }}"
+  - name: Unpack TAR file
+    unarchive:
+       src: "{{ install_dir }}/{{ code_source_archive }}"
+       dest: "{{ install_dir }}"
+  - name: Move unpacked distribution to /usr/lib/code-server
+    shell:
+       chdir: "{{ install_dir }}"
+       cmd: "mv {{ code_source_dist }} {{ code_server_dir }}"
+       creates: "{{ code_server_dir }}"
+  - name: Symlink code-server to /usr/bin/code-server
+    file:
+       src: "{{ code_server_dir }}/bin/code-server"
+       dest: "/usr/bin/code-server"
+       state: link
