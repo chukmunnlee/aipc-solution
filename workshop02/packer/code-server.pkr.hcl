@@ -45,8 +45,7 @@ build {
 		playbook_file = "./playbook.yaml"
 		extra_arguments = [
 			"-e", "code_server_version=${var.CS_version}",
-			"-e", "install_dir=/opt/tmp",
-			"-e", "password=\"${var.CS_password}\""
+			"-e", "install_dir=/opt/tmp"
 		]
 	}
 }

@@ -1,7 +1,6 @@
 # Input variables
 # - code_server_version 
 # - install_dir
-# - password
 
 - name: Install code-server
   hosts: all
@@ -10,7 +9,6 @@
      code_server_dist: "code-server-{{ code_server_version }}-linux-amd64"
      code_server_archive: "{{ code_server_dist }}.tar.gz"
      code_server_url: "https://github.com/cdr/code-server/releases/download/v{{ code_server_version }}/{{ code_server_archive }}"
-     code_server_password: "{{ password }}"
   tags:
   - phase_1
   tasks:

@@ -2,7 +2,7 @@ server {
 	listen 80;
 	listen [::]:80;
 
-	server_name code-{{ ansible_host }}.nip.io;
+	server_name __SET_THIS__;
 
 	location / {
 		proxy_pass http://localhost:8080/;
