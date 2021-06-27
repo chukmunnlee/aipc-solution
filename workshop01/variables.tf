@@ -20,6 +20,16 @@ variable DO_size {
   default = "s-1vcpu-1gb"
 }
 
+variable key_public {
+  type = string
+  default = "../../keys/mykey.pub"
+}
+
+variable key_private {
+  type = string
+  default = "../../keys/mykey"
+}
+
 variable docker_host {
   type = string
   description = "Docker host. Get from DOCKER_HOST"

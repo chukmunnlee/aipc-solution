@@ -26,7 +26,7 @@ locals {
 # Nginx
 resource digitalocean_ssh_key default-key {
   name = "default-key"
-  public_key = file("../keys/mykey.pub")
+  public_key = file(var.key_public)
 }
 
 resource digitalocean_droplet nginx {
@@ -39,7 +39,7 @@ resource digitalocean_droplet nginx {
   connection {
     type = "ssh"
     user = "root"
-    private_key = file("../keys/mykey")
+    private_key = file(var.key_private)
     host = self.ipv4_address
   }
 
