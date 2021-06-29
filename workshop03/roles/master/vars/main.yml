@@ -1,0 +1,5 @@
+---
+# vars file for master
+ndb_tar_gz: https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
+ndb_package: mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
+ndb_dir: mysql-cluster-8.0.25-linux-glibc2.12-x86_64

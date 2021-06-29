@@ -1,0 +1,4 @@
+---
+# defaults file for master
+download_dir: /usr/local/opt
+cluster_config_dir: /var/lib/mysql-cluster

@@ -1,0 +1,16 @@
+---
+- name: Set up servers
+  hosts: all
+  become: yes
+  roles:
+  - role: roles/common
+  tags:
+  - common
+
+- name: Setup master
+  hosts: master
+  become: yes
+  roles:
+  - role: roles/master
+  tags:
+  - master

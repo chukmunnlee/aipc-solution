@@ -1,0 +1,26 @@
+- name: test
+  hosts: master
+  vars:
+     master_node: "{{ hostvars['node-1'].ansible_host }}"
+     replicas: "{{ groups['replicas'] }}"
+     cluster_config_dir: /var/lib/mysql-cluster
+     ndb_tar_gz: https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
+     ndb_package: mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
+     ndb_dir: mysql-cluster-8.0.25-linux-glibc2.12-x86_64
+     download_dir: /usr/local/opt
+  tasks:
+  - name: debug
+    debug:
+       msg: ">>> {{ groups['replicas'] }}"
+
+  - name: generate file config
+    template:
+       src: "./roles/master/files/config.ini.j2"
+       dest: ./config.ini
+    delegate_to: localhost
+
+  - name: generate file service
+    template:
+       src: "./roles/master/files/ndb_mgmd.service.j2"
+       dest: "./ndb_mgmd.service"
+    delegate_to: localhost
