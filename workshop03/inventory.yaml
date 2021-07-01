@@ -7,17 +7,17 @@ all:
       ndb_package: mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
       ndb_dir: mysql-cluster-8.0.25-linux-glibc2.12-x86_64
    hosts:
-      node-1:
+      node-0:
          ansible_host: 172.28.91.229
-      node-2:
+      node-1:
          ansible_host: 172.28.69.125
-      node-3:
+      node-2:
          ansible_host: 172.28.104.171
    children:
       sql_node:
          hosts:
-            node-1:
+            node-0:
       data_nodes:
          hosts:
+            node-1:
             node-2:
-            node-3:

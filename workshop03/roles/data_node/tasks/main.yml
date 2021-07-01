@@ -11,7 +11,7 @@
 
 - name: Generate /etc/my.cnf configuration file
   vars:
-     sql_node: "{{ hostvars['node-1'].ansible_host }}"
+     sql_node: "{{ hostvars['node-0'].ansible_host }}"
   template:
      src: "./files/my.cnf.j2"
      dest: "/etc/my.cnf"
