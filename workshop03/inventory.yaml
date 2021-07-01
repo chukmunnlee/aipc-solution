@@ -14,10 +14,10 @@ all:
       node-3:
          ansible_host: 172.28.104.171
    children:
-      master:
+      sql_node:
          hosts:
             node-1:
-      replicas:
+      data_nodes:
          hosts:
             node-2:
             node-3:

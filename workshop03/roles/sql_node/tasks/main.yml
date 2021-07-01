@@ -1,20 +1,12 @@
 ---
 # tasks file for master
 # Install MySQL 
-- name: Change /usr/loca/mysql directory to mysql/mysql
+- name: Make mysql-cluster directory
   file:
-     dest: "{{ download_dir }}/{{ ndb_dir }}"
-     owner: root
-     group: mysql
-- name: Make data and mysql-cluster directory
-  file:
-     dest: "{{ download_dir }}/{{ ndb_dir }}/{{ item }}"
+     dest: "{{ download_dir }}/{{ ndb_dir }}/mysql-cluster"
      state: directory
      owner: mysql
      group: mysql
-  loop:
-  - data
-  - mysql-cluster
 - name: Check if we have initialized 
   find:
      paths: "{{ download_dir }}/{{ ndb_dir }}/data"
@@ -27,7 +19,7 @@
   when: f.matched <= 0
 - name: Display the generated password
   debug:
-     msg: "Output from mysqld --initialize: {{ mysql_out }}"
+     msg: "Output from mysqld --initialize: {{ mysql_out.stderr }}"
   when: mysql_out is defined
 - name: Copy mysql.server file to init.d
   copy:
@@ -47,7 +39,6 @@
   loop:
   - ndb_mgm
   - ndb_mgmd
-
 - name: Create cluster configuration directory
   file:
      path: "{{ cluster_config_dir }}"
@@ -55,8 +46,8 @@
 
 - name: Generate cluster configuration file
   vars:
-     master_node: "{{ hostvars['node-1'].ansible_host }}"
-     replicas: "{{ groups['replicas'] }}"
+     sql_node: "{{ hostvars['node-1'].ansible_host }}"
+     data_nodes: "{{ groups['data_nodes'] }}"
   template:
      src: "../files/config.ini.j2"
      dest: "{{ cluster_config_dir }}/config.ini"
@@ -68,5 +59,5 @@
 - name: Start cluster management service
   systemd:
      daemon_reload: yes
-     name: ndb_mgmd.service
+     name: ndb_mgmd
      state: restarted

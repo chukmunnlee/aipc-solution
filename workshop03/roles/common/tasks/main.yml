@@ -30,10 +30,18 @@
      src: "{{ ndb_tar_gz }}"
      dest: "{{ download_dir }}"
      remote_src: yes
+     owner: root
+     group: mysql
   when: not f.stat.exists
 - name: Link unpacked directory to /usr/local/mysql
   file:
      src: "{{ download_dir }}/{{ ndb_dir }}"
      dest: "/usr/local/mysql"
      state: link
-
+- name: Create data directory
+  file:
+     path: "{{ download_dir }}/{{ ndb_dir }}/data"
+     state: directory
+     mode: "0755"
+     owner: mysql
+     group: mysql

@@ -7,10 +7,10 @@
   tags:
   - common
 
-- name: Setup master
-  hosts: master
+- name: Setup SQL node
+  hosts: sql_node
   become: yes
   roles:
-  - role: roles/master
+  - role: roles/sql_node
   tags:
-  - master
+  - sql_node

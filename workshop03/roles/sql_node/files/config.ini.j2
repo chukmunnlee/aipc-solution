@@ -1,0 +1,21 @@
+[ndbd default]
+NoOfReplicas={{ data_nodes | length }}  # Number of data nodes
+DataMemory=98M
+IndexMemory=18M
+
+[ndb_mgmd]
+HostName={{ sql_node }} 
+DataDir={{ cluster_config_dir }}  # Directory for the log files
+
+{% for dn in data_nodes -%}
+
+[ndbd]
+NodeId={{ loop.index + 1 }}            # Node ID for this data node
+HostName={{ hostvars[dn].ansible_host }} # Hostname/IP of the first data node
+DataDir={{ download_dir }}/{{ ndb_dir }}/data   # Remote directory for the data files
+
+{% endfor %}
+
+[mysqld]
+# SQL node options:
+HostName={{ sql_node }} # In our case the MySQL server/client is on the same Droplet as the cluster manager
