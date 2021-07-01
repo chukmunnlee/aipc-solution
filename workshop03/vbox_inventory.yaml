@@ -1,20 +1,23 @@
 all:
    vars:
-      ansible_user: root
+      ansible_user: osboxes
+      ansible_password: osboxes.org
       ansible_connection: ssh
-      ansible_private_key_file: ../../keys/mykey
       ndb_tar_gz: https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
       ndb_package: mysql-cluster-8.0.25-linux-glibc2.12-x86_64.tar.gz
       ndb_dir: mysql-cluster-8.0.25-linux-glibc2.12-x86_64
    hosts:
-      node-0:
-         ansible_host: 165.22.97.24:49153
       node-1:
-         ansible_host: 165.22.97.24:49154
+         ansible_host: 172.28.91.229
+      node-2:
+         ansible_host: 172.28.69.125
+      node-3:
+         ansible_host: 172.28.104.171
    children:
-      sql_node:
-         hosts:
-            node-0:
-      data_nodes:
+      master:
          hosts:
             node-1:
+      replicas:
+         hosts:
+            node-2:
+            node-3:
