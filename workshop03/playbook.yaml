@@ -14,3 +14,11 @@
   - role: roles/sql_node
   tags:
   - sql_node
+
+- name: Setup data node
+  hosts: data_nodes
+  become: yes
+  roles:
+  - role: roles/data_node
+  tags:
+  - data_nodes

@@ -11,9 +11,9 @@
   find:
      paths: "{{ download_dir }}/{{ ndb_dir }}/data"
   register: f
-- name: Initialize MySQL
+- name: Initialize MySQL - will create the data directory
   shell:
-     cmd: bin/mysqld --initialize
+     cmd: bin/mysqld --initialize --user=mysql
      chdir: "{{ download_dir }}/{{ ndb_dir }}"
   register: mysql_out
   when: f.matched <= 0
@@ -25,6 +25,7 @@
   copy:
      src: "{{ download_dir }}/{{ ndb_dir }}/support-files/mysql.server"
      dest: "/etc/init.d/mysql.server"
+     mode: "a+x"
      remote_src: yes
 - name: Enable at startup 
   shell:
@@ -59,5 +60,8 @@
 - name: Start cluster management service
   systemd:
      daemon_reload: yes
-     name: ndb_mgmd
+     name: "{{ item }}"
      state: restarted
+  loop:
+  - ndb_mgmd
+  - mysql.server

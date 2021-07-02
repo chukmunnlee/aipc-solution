@@ -9,16 +9,10 @@
   - ndbd
   - ndbmtd
 
-- name: Generate /etc/my.cnf configuration file
-  vars:
-     sql_node: "{{ hostvars['node-0'].ansible_host }}"
-  template:
-     src: "./files/my.cnf.j2"
-     dest: "/etc/my.cnf"
-
 - name: Copy ndbd service file to /lib/systemd/system
-  src: "./files/ndbd.service"
-  dest: "/lib/systemd/system/ndbd.service"
+  copy:
+     src: "./files/ndbd.service"
+     dest: "/lib/systemd/system/ndbd.service"
 
 - name: Start data node service
   systemd:

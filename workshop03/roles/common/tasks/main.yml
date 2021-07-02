@@ -1,7 +1,7 @@
 ---
 - name: Install libaio1
   apt:
-     name: libaio1
+     name: "{{ item }}"
      state: present
   loop:
   - libaio1
@@ -21,27 +21,31 @@
      path: "{{ download_dir }}"
      state: directory
      mode: "0755"
-- name: Check if package have been packed
+- name: Check if package have been downloaded
   stat:
-     path: "{{ download_dir }}/{{ ndb_dir }}"
+     path: "{{ download_dir }}/{{ ndb_package }}"
   register: f
+- name: Download NDB into download_dir
+  get_url:
+     url: "{{ ndb_tar_gz }}"
+     dest: "{{ download_dir }}/{{ ndb_package }}"
+  when: not f.stat.exists
 - name: Unpack the NDB in download_dir
   unarchive:
-     src: "{{ ndb_tar_gz }}"
+     src: "{{ download_dir }}/{{ ndb_package }}"
      dest: "{{ download_dir }}"
      remote_src: yes
      owner: root
      group: mysql
-  when: not f.stat.exists
 - name: Link unpacked directory to /usr/local/mysql
   file:
      src: "{{ download_dir }}/{{ ndb_dir }}"
      dest: "/usr/local/mysql"
      state: link
-- name: Create data directory
-  file:
-     path: "{{ download_dir }}/{{ ndb_dir }}/data"
-     state: directory
-     mode: "0755"
-     owner: mysql
-     group: mysql
+
+- name: Generate /etc/my.cnf configuration file for all the nodes
+  vars:
+     sql_node: "{{ hostvars['node-0'].ansible_host }}"
+  template:
+     src: "./files/my.cnf.j2"
+     dest: "/etc/my.cnf"
