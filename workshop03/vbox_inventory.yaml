@@ -8,9 +8,9 @@ all:
       ndb_dir: mysql-cluster-8.0.25-linux-glibc2.12-x86_64
    hosts:
       node-0:
-         ansible_host: 172.28.89.177
+         ansible_host: 172.28.87.226
       node-1:
-         ansible_host: 172.28.86.254
+         ansible_host: 172.28.91.253
       node-2:
          ansible_host: 172.28.86.253
    children:

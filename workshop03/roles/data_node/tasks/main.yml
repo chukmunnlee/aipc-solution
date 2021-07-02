@@ -14,6 +14,14 @@
      src: "./files/ndbd.service"
      dest: "/lib/systemd/system/ndbd.service"
 
+- name: Create empty data directory for each data node
+  file:
+     path: "{{ download_dir }}/{{ ndb_dir }}/data"
+     state: directory
+     owner: mysql
+     group: mysql
+     mode: "0755"
+
 - name: Start data node service
   systemd:
      daemon_reload: yes
