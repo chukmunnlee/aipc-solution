@@ -6,6 +6,10 @@
   loop:
   - libaio1
   - libtinfo5
+  register: result
+  until: result is not failed
+  retries: 5
+  delay: 5
 - name: Create mysql group 
   group:
      name: mysql

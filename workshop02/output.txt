@@ -1,0 +1,1 @@
+[Note] [MY-010454] [Server] A temporary password is generated for root@localhost: >Xu10Zoyc)wN

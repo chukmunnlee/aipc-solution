@@ -63,6 +63,10 @@
        name: nginx
        update_cache: yes
        state: latest
+    register: result
+    until: result is not failed
+    retries: 5
+    delay: 5
   - name: Copy code server config file for Nginx
     template:
        src: "./code-server.conf.j2"

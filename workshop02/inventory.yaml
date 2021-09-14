@@ -1,0 +1,7 @@
+all:
+   hosts:
+      database:
+         ansible_host: 172.28.69.209
+         ansible_connection: ssh
+         ansible_user: osboxes
+         ansible_password: osboxes.org
