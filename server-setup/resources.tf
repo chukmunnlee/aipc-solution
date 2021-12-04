@@ -1,12 +1,13 @@
+// data
 data digitalocean_ssh_key aipc {
   name = "aipc"
 }
 
-data cloudflare_zone hello-chuklee {
+data cloudflare_zone dns-zone {
   name = var.CF_zone
 }
 
-/*
+// resources
 resource digitalocean_droplet aipc-control {
   name = "aipc-control"
   image = var.DO_image
@@ -23,14 +24,13 @@ resource local_file root-at-ip {
 output aipc_control_ip {
   value = digitalocean_droplet.aipc-control.ipv4_address
 }
-*/
 
-
+// outputs
 output aipc_key {
   value = data.digitalocean_ssh_key.aipc.fingerprint
 }
 
-output hello_chuklee {
-  value = data.cloudflare_zone.hello-chuklee
+output dns_zone {
+  value = data.cloudflare_zone.dns-zone
 }
 
