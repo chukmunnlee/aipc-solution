@@ -10,7 +10,7 @@ variable DO_region {
 
 variable DO_size {
   type = string
-  default = "s-2vcpu-2gb-intel"
+  default = "s-1vcpu-2gb-intel"
 }
 
 variable DO_image {
@@ -28,5 +28,9 @@ variable CF_api_token {
 }
 
 variable CF_zone {
+  type = string
+}
+
+variable private_key {
   type = string
 }

@@ -17,8 +17,29 @@ resource digitalocean_droplet aipc-control {
   ssh_keys = [ data.digitalocean_ssh_key.aipc.fingerprint ]
 }
 
+resource cloudflare_record a-lumya {
+  zone_id = data.cloudflare_zone.dns-zone.zone_id
+  name = "lumya"
+  type = "A"
+  proxied = true
+  value = digitalocean_droplet.aipc-control.ipv4_address
+}
+
 resource local_file root-at-ip {
   filename = "root@${digitalocean_droplet.aipc-control.ipv4_address}"
+  file_permission = "0664"
+}
+
+resource local_file ansible-inventory {
+  filename = "setup/inventory.yaml"
+  content = templatefile("inventory.yaml.tpl", 
+    {
+      hostname = digitalocean_droplet.aipc-control.name
+      host_ip = digitalocean_droplet.aipc-control.ipv4_address
+      private_key = var.private_key
+    }
+  )
+  file_permission = "0664"
 }
 
 output aipc_control_ip {
