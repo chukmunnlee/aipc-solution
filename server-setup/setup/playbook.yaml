@@ -72,9 +72,11 @@
   - name: Create user fred
     user:
        name: fred
+       shell: /bin/bash
        groups:
        - docker
        - sudo
+       append: yes
        state: present
   - name: Add ssh key to fred
     authorized_key:
