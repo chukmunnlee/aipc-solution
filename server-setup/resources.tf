@@ -42,6 +42,16 @@ resource local_file ansible-inventory {
   file_permission = "0664"
 }
 
+resource local_file add-host {
+  filename = "setup/add-host.sh"
+  content = templatefile("add-host.sh.tpl",
+    {
+      host_ip = digitalocean_droplet.aipc-control.ipv4_address
+    }
+  )
+  file_permission = "0755"
+}
+
 output aipc_control_ip {
   value = digitalocean_droplet.aipc-control.ipv4_address
 }
