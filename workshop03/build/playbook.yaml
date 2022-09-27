@@ -1,83 +1,76 @@
-# Input variables
-# - code_server_version 
-# - install_dir
-
-- name: Install code-server
+- name: Download and Setup Code Server
   hosts: all
   vars:
-     code_server_dir: "/usr/lib/code-server"
-     code_server_dist: "code-server-{{ code_server_version }}-linux-amd64"
-     code_server_archive: "{{ code_server_dist }}.tar.gz"
-     code_server_url: "https://github.com/cdr/code-server/releases/download/v{{ code_server_version }}/{{ code_server_archive }}"
-  tags:
-  - phase_1
+    download_dir: /usr/local/opt
+    download: "https://github.com/coder/code-server/releases/download/v{{ CS_version }}/code-server-{{ CS_version }}-linux-amd64.tar.gz"
+    cs_dir: "code-server-{{ CS_version }}-linux-amd64"
+    directories:
+    - "{{ download_dir }}"
+    - /var/lib/code-server
   tasks:
-  - name: Make required directories
+  - name: Create directory in /usr/local/opt
     file:
-       path: "{{ item }}"
-       state: directory
-       mode: "0755"
-    loop:
-    - "{{ install_dir }}"
-    - "/var/lib/code-server"
-  - name: Check if archive have been downloaded
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop: "{{ directories }}"
+  - name: Check if exists
     stat:
-       path: '{{ install_dir }}/{{ code_server_archive }}'
-    register: f
-  - name: Download code-server
-    get_url:
-       url: "{{ code_server_url }}"
-       dest: "{{ install_dir }}"
-    when: not f.stat.exists
-  - name: Unpack TAR file
+      path: "{{ download_dir }}/{{ cs_dir }}"
+    register: dir
+  - name: Download and unzip 
     unarchive:
-       src: "{{ install_dir }}/{{ code_server_archive }}"
-       dest: "{{ install_dir }}"
-       remote_src: yes
-  - name: Move unpacked distribution to /usr/lib/code-server
-    shell:
-       chdir: "{{ install_dir }}"
-       cmd: "mv {{ code_server_dist }} {{ code_server_dir }}"
-       creates: "{{ code_server_dir }}"
-  - name: Symlink code-server to /usr/bin/code-server
+      src: "{{ download }}"
+      dest: "{{ download_dir }}"
+      remote_src: yes
+    when: not dir.stat.exists
+  - name: Link cs_dir to /usr/lib/code-server
     file:
-       src: "{{ code_server_dir }}/bin/code-server"
-       dest: "/usr/bin/code-server"
-       state: link
-  - name: Create service file
-    template:
-       src: "./code-server.service.j2"
-       dest: "/lib/systemd/system/code-server.service"
-  - name: Enable code server
+      src: "{{ download_dir }}/{{ cs_dir }}"
+      dest: /usr/lib/code-server
+      state: link
+  - name: Link code-server to /usr/bin/code-server
+    file:
+      src: /usr/lib/code-server/bin/code-server
+      dest: /usr/bin/code-server
+      state: link
+  - name: Create code-server service
+    copy:
+      src: code-server.service
+      dest: /lib/systemd/system/code-server.service
+      mode: '0644'
+  - name: Start code-server
     systemd:
-       name: code-server
-       state: started
+      daemon_reload: yes
+      name: code-server
+      enabled: yes
+      state: started
 
-- name: Install Nginx
+- name: Install and configure Nginx
   hosts: all
-  tags:
-  - phase_2
   tasks:
   - name: Install Nginx
     apt:
-       name: nginx
-       update_cache: yes
-       state: latest
+      update_cache: yes
+      name: nginx
+      state: latest
     register: result
-    until: result is not failed
-    retries: 5
+    until: result.stderr == ""
+    retries: 10
     delay: 5
-  - name: Copy code server config file for Nginx
-    template:
-       src: "./code-server.conf.j2"
-       dest: "/etc/nginx/sites-available/code-server.conf"
-  - name: Symlink code server config to sites-enabled
+  - name: Copy code-server.conf to /etc/nginx/sites-available
+    copy:
+      src: code-server.conf
+      dest: /etc/nginx/sites-available/code-server.conf
+      mode: '0644'
+  - name: Link code-server.conf to /etc/nginx/sites-enabled
     file:
-       src: "/etc/nginx/sites-available/code-server.conf"
-       dest: "/etc/nginx/sites-enabled/code-server.conf"
-       state: link
+      src: /etc/nginx/sites-available/code-server.conf
+      dest: /etc/nginx/sites-enabled/code-server.conf
+      state: link
   - name: Restart Nginx
     systemd:
-       name: nginx
-       state: restarted
+      name: nginx
+      enabled: yes
+      state: restarted
 

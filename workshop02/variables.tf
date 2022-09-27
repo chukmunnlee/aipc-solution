@@ -16,7 +16,7 @@ variable DO_region {
 }
 variable DO_size {
     type = string
-    default = "s-1vcpu-2gb"
+    default = "s-1vcpu-1gb"
 }
 
 variable CF_email {
@@ -27,14 +27,15 @@ variable CF_api_token {
   sensitive = true
 }
 
-variable CS_code_server {
+variable code_server {
   type = string
   default = "codeserver"
 }
-variable CS_password {
+variable cs_domain_name {
   type = string
+  default = "chuklee.com"
 }
-variable CS_version {
+variable cs_password {
   type = string
 }
 
