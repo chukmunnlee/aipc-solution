@@ -1,0 +1,24 @@
+---
+- name: Set up servers
+  hosts: all
+  become: yes
+  roles:
+  - role: roles/common
+  tags:
+  - common
+
+- name: Setup SQL node
+  hosts: sql_node
+  become: yes
+  roles:
+  - role: roles/sql_node
+  tags:
+  - sql_node
+
+- name: Setup data node
+  hosts: data_nodes
+  become: yes
+  roles:
+  - role: roles/data_node
+  tags:
+  - data_nodes

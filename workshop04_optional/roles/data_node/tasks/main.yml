@@ -1,0 +1,29 @@
+---
+# tasks file for replica
+- name: Copy data node daemons to /usr/local/bin
+  file:
+     src: "{{ download_dir }}/{{ ndb_dir }}/bin/{{ item }}"
+     dest: "/usr/local/bin/{{ item }}"
+     state: link
+  loop:
+  - ndbd
+  - ndbmtd
+
+- name: Copy ndbd service file to /lib/systemd/system
+  copy:
+     src: "./files/ndbd.service"
+     dest: "/lib/systemd/system/ndbd.service"
+
+- name: Create empty data directory for each data node
+  file:
+     path: "{{ download_dir }}/{{ ndb_dir }}/data"
+     state: directory
+     owner: mysql
+     group: mysql
+     mode: "0755"
+
+- name: Start data node service
+  systemd:
+     daemon_reload: yes
+     name: ndbd
+     state: restarted

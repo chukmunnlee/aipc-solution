@@ -1,0 +1,21 @@
+all:
+   vars:
+      ansible_user: <user>
+      ansible_private_key_file: <private key>
+      ansible_connection: ssh
+      <other variables>
+   hosts:
+      node-0:
+         ansible_host: <private ipv4 address>
+      node-1:
+         ansible_host: <private ipv4 address>
+      node-2:
+         ansible_host: <private ipv4 address>
+   children:
+      sql_node:
+         hosts:
+            node-0:
+      data_node:
+         hosts:
+            node-1:
+            node-2:

@@ -1,0 +1,14 @@
+**/.terraform/*
+
+.terraform.lock.hcl
+
+*.tfstate
+*.tfstate.*
+
+*.tfvars
+
+root@*
+
+setup/inventory.yaml
+setup/add-host.sh
+

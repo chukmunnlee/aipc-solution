@@ -1,0 +1,123 @@
+- name: Download mysql
+  hosts: all
+  vars:
+     download_dir: /usr/local/opt
+     mysql: mysql-8.0.26-linux-glibc2.12-x86_64
+     mysql_archive: https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.26-linux-glibc2.12-x86_64.tar.xz
+     mysql_base_dir: /usr/local/opt/mysql
+     mysql_checksum: "md5:100a0e9336ef106a5fe90e6803b57066"
+     mysql_root_password: changeit
+  become: true
+  tasks:
+  # Install packages and create users
+  - name: Install packages
+    apt:
+       name: "{{ item }}"
+       state: latest
+    loop:
+    - libaio1
+    - libtinfo5
+    register: result
+    until: result is not failed
+    retries: 5
+    delay: 5
+  - name: Create mysql group
+    group:
+       name: mysql
+       state: present
+  - name: Create mysql user 
+    user:
+       name: mysql
+       groups: mysql
+       append: yes
+  - name: Check if directory /usr/local/opt exists
+    stat:
+       path: "{{ download_dir }}"
+    register: f
+  - name: Create directory /usr/local/opt
+    file:
+       name: "{{ download_dir }}"
+       state: directory
+       mode: '0775'
+       group: mysql
+    when: not f.stat.exists
+  - name: Check if mysql_archive exists
+    stat:
+       path: "{{ download_dir }}/mysql.tar.xz"
+    register: f
+  - name: Download mysql
+    get_url:
+       url: "{{ mysql_archive }}"
+       dest: "{{ download_dir }}/mysql.tar.xz"
+       checksum: "{{ mysql_checksum }}"
+    when: not f.stat.exists
+  - name: Unpack mysql.tar.xz
+    unarchive:
+       src: "{{ download_dir }}/mysql.tar.xz"
+       dest: "{{ download_dir }}"
+       remote_src: yes
+       creates: "{{ download_dir }}/{{ mysql }}"
+  - name: Create a symbolic link
+    file:
+       src: "{{ download_dir }}/{{ mysql }}"
+       dest: "{{ mysql_base_dir }}"
+       state: link
+       owner: root
+       group: mysql
+  - name: Link mysql to /usr/local/bin
+    file: 
+       src: "{{ mysql_base_dir }}/bin/mysql"
+       dest: "/usr/local/bin/mysql"
+       state: link
+       owner: root
+       group: mysql
+       mode: '0755'
+
+  # Setup MySQL files
+  - name: Generate my.cnf and copy /etc
+    template:
+       src: ./my.cnf.j2
+       dest: /etc/my.cnf
+       mode: '0644'
+  - name: Initialize mysql
+    command:
+       chdir: "{{ mysql_base_dir }}"
+       argv:
+       - bin/mysqld
+       - --initialize
+       - --user=mysql
+       creates: /var/lib/mysql
+    register: mysql_out
+  - name: Get password
+    set_fact:
+       install_password: "{{ mysql_out.stderr_lines[-1].split(':')[-1] | trim }}"
+  - name: Echo password
+    debug:
+       msg: "MySQL randomly generated password: '{{ install_password }}'"
+
+  # service
+  - name: Generate mysql.service file and copy to /lib/systemd/system
+    template:
+       src: ./mysql.service.j2
+       dest: /lib/systemd/system/mysql.service
+       mode: '0644'
+  - name: Reload services, enable and start mysql.service
+    systemd:
+       daemon_reload: yes
+       name: mysql
+       enabled: yes
+       state: started
+
+  - name: Generate SQL file
+    template:
+       src: ./change_root_password.sql.j2
+       dest: "{{ download_dir }}/change_root_password.sql"
+       mode: '0644'
+  - name: Change root password
+    shell: 
+       cmd: "mysql -uroot -p'{{ install_password }}' --connect-expired-password  < {{ download_dir }}/change_root_password.sql"
+  - name: Delete SQL file
+    file:
+       path: "{{ download_dir }}/change_root_password.sql"
+       state: absent
+

@@ -1,0 +1,67 @@
+---
+# tasks file for master
+# Install MySQL 
+- name: Make mysql-cluster directory
+  file:
+     dest: "{{ download_dir }}/{{ ndb_dir }}/mysql-cluster"
+     state: directory
+     owner: mysql
+     group: mysql
+- name: Check if we have initialized 
+  find:
+     paths: "{{ download_dir }}/{{ ndb_dir }}/data"
+  register: f
+- name: Initialize MySQL - will create the data directory
+  shell:
+     cmd: bin/mysqld --initialize --user=mysql
+     chdir: "{{ download_dir }}/{{ ndb_dir }}"
+  register: mysql_out
+  when: f.matched <= 0
+- name: Display the generated password
+  debug:
+     msg: "Output from mysqld --initialize: {{ mysql_out.stderr }}"
+  when: mysql_out is defined
+- name: Copy mysql.server file to init.d
+  copy:
+     src: "{{ download_dir }}/{{ ndb_dir }}/support-files/mysql.server"
+     dest: "/etc/init.d/mysql.server"
+     mode: "a+x"
+     remote_src: yes
+- name: Enable at startup 
+  shell:
+     cmd: update-rc.d mysql.server defaults
+
+# Install cluster management
+- name: Link management files to /usr/local/bin
+  file:
+     src: "{{ download_dir }}/{{ ndb_dir }}/bin/{{ item }}"
+     dest: "/usr/local/bin/{{ item }}"
+     state: link
+  loop:
+  - ndb_mgm
+  - ndb_mgmd
+- name: Create cluster configuration directory
+  file:
+     path: "{{ cluster_config_dir }}"
+     state: directory
+
+- name: Generate cluster configuration file
+  vars:
+     sql_node: "{{ hostvars['node-0'].ansible_host }}"
+     data_nodes: "{{ groups['data_nodes'] }}"
+  template:
+     src: "../files/config.ini.j2"
+     dest: "{{ cluster_config_dir }}/config.ini"
+
+- name: Generate cluster management service
+  template:
+     src: "../files/ndb_mgmd.service.j2"
+     dest: "/lib/systemd/system/ndb_mgmd.service"
+- name: Start cluster management service
+  systemd:
+     daemon_reload: yes
+     name: "{{ item }}"
+     state: restarted
+  loop:
+  - ndb_mgmd
+  - mysql.server

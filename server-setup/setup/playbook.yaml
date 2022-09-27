@@ -1,0 +1,110 @@
+- name: Install packages
+  hosts: all
+  vars:
+     nginx_html: '/var/www/html'
+  tasks:
+  - name: Connectivity test
+    ping:
+
+  - name: Install basic packages
+    apt:
+       update_cache: yes
+       name: "{{ item }}"
+       state: present
+    loop:
+    - software-properties-common
+    - ca-certificates 
+    - apt-transport-https 
+    - curl 
+    - zip 
+    - git
+    - nginx
+
+  - name: Add keys
+    apt_key:
+       url: https://download.docker.com/linux/ubuntu/gpg
+       state: present
+
+  - name: Add Ansible PPA
+    apt_repository:
+       repo: "{{ item }}"
+    loop:
+    - ppa:ansible/ansible
+    - 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'
+
+  - name: Install Ansible and Docker
+    apt:
+       update_cache: yes
+       name: "{{ item }}"
+       state: present
+    loop:
+    - ansible
+    - docker-ce
+    - docker-ce-cli 
+    - containerd.io
+
+  - name: Enable services
+    systemd:
+       name: "{{ item }}"
+       state: started
+       enabled: true
+    loop:
+    - ssh
+    - docker
+    - nginx
+
+  - name: Get /var/www/html contents
+    find:
+       path: "{{ nginx_html }}"
+    register: html_files
+
+  - name: Delete /var/www/html contents
+    file:
+       name: "{{ item.path }}"
+       state: absent
+    loop: "{{ html_files.files }}"
+
+  - name: Copy nginx-assets to /var/www/html
+    copy:
+       src: ./nginx-assets/ 
+       dest: /var/www/html/
+
+  - name: Create user fred
+    user:
+       name: fred
+       shell: /bin/bash
+       groups:
+       - docker
+       - sudo
+       append: yes
+       state: present
+  - name: Add ssh key to fred
+    authorized_key:
+       user: fred
+       key: "{{ fred_pub }}"
+       state: present
+
+  - name: Install required packages
+    unarchive:
+       src: "{{ item }}"
+       dest: /usr/local/bin
+       mode: "a+x"
+       remote_src: yes
+    loop: "{{ hashicorp_bins }}"
+
+  - name: Install docker-machine
+    get_url:
+       url: "{{ docker_machine_bin }}"
+       dest: /usr/local/bin/docker-machine
+       mode: "a+x"
+
+  - name: Update all packages
+    apt:
+       update_cache: yes
+       upgrade: dist
+       state: latest
+    register: apt_update
+
+  - name: Reboot machine
+    reboot:
+    when: "'cache_updated' in apt_update and apt_update.cache_updated"
