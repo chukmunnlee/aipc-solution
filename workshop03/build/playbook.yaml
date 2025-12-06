@@ -55,9 +55,9 @@
       name: nginx
       state: latest
     register: result
-    until: result.stderr == ""
+    until: result.stderr is not defined or result.stderr == ""
     retries: 10
-    delay: 5
+    delay: 10
   - name: Copy code-server.conf to /etc/nginx/sites-available
     copy:
       src: code-server.conf
